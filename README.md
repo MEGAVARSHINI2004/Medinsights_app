@@ -61,7 +61,7 @@ http://127.0.0.1:5000/
 Upload a skin image and click Predict.
 View the prediction, remedy, doctors, and diet suggestions.
 
-Project Structure
+Project Structure:
 Skin-Cancer-Detection/
 │
 ├── app.py                # Flask web app
@@ -73,6 +73,7 @@ Skin-Cancer-Detection/
 │   └── result.html       # Prediction results page
 ├── static/uploads/       # Folder to store uploaded images
 └── README.md
+
 
 
 Technologies Used

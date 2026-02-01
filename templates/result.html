@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Analysis Result - MedInsights</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        .result-card {
+            border-left: 5px solid;
+            transition: transform 0.2s;
+        }
+        .result-card:hover {
+            transform: translateY(-2px);
+        }
+        .severity-high { border-left-color: #dc3545; }
+        .severity-medium { border-left-color: #ffc107; }
+        .severity-low { border-left-color: #198754; }
+        .severity-none { border-left-color: #6c757d; }
+        .doctor-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .doctor-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .time-slot {
+            padding: 8px 12px;
+            margin: 3px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        .time-slot:hover, .time-slot.selected {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <strong>MedInsights</strong> - Skin Cancer Detection
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/book_appointment">Book Appointment</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/view_appointments">My Appointments</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Analysis Result</h2>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Image Preview -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-image"></i> Uploaded Image</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="{{ image_url }}" alt="Analyzed Image" class="img-fluid rounded" style="max-height: 400px;">
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div class="card shadow-sm result-card severity-{{ severity.lower() if severity else 'none' }}">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-clipboard-data"></i> Analysis Results</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-{{ result_type }} text-center">
+                            <h4 class="alert-heading">{{ prediction }}</h4>
+                            <p class="mb-0">Confidence: <strong>{{ confidence }}</strong></p>
+                            {% if severity and severity != "None" %}
+                            <hr>
+                            <p class="mb-0">Severity: <strong>{{ severity }}</strong></p>
+                            {% endif %}
+                            {% if urgency %}
+                            <p class="mb-0 mt-2">
+                                <i class="bi bi-clock"></i> <strong>Urgency:</strong> {{ urgency }}
+                            </p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Treatment Information -->
+                        <div class="row">
+                            {% if remedy %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0"><i class="bi bi-heart-pulse"></i> Treatment</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-0">{{ remedy }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if doctors %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-header bg-warning">
+                                        <h6 class="mb-0"><i class="bi bi-person-badge"></i> Specialists</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-0">{{ doctors }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if diet %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0"><i class="bi bi-egg-fried"></i> Diet</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-0">{{ diet }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appointment Booking Section -->
+                {% if disease_name and disease_name != "Normal skin" %}
+                <div class="card border-primary shadow-sm mt-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-calendar-check"></i> Book Doctor Appointment</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Based on your analysis results, we recommend consulting a specialist for proper diagnosis and treatment.
+                            You can book an appointment directly with our partnered dermatologists.
+                        </p>
+                        
+                        <div class="d-grid gap-2 d-md-flex mb-4">
+                            <a href="/book_appointment?disease={{ disease_name }}" 
+                               class="btn btn-primary btn-lg">
+                                <i class="bi bi-calendar-plus"></i> Book Appointment Now
+                            </a>
+                            <a href="/view_appointments" class="btn btn-outline-primary btn-lg">
+                                <i class="bi bi-calendar-week"></i> View My Appointments
+                            </a>
+                        </div>
+
+                        {% if available_doctors %}
+                        <h6 class="mt-4 mb-3">Available Specialists for <strong>{{ disease_name }}</strong>:</h6>
+                        <div class="row">
+                            {% for doctor in available_doctors[:2] %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card doctor-card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="card-title mb-1">{{ doctor.name }}</h6>
+                                                <p class="card-text mb-1 text-muted small">{{ doctor.specialization }}</p>
+                                                <p class="card-text mb-1 small">
+                                                    <i class="bi bi-hospital"></i> {{ doctor.hospital }}
+                                                </p>
+                                            </div>
+                                            <span class="badge bg-success">{{ doctor.fees }}</span>
+                                        </div>
+                                        <div class="mt-2">
+                                            <p class="mb-1 small">
+                                                <i class="bi bi-star-fill text-warning"></i> {{ doctor.rating }}
+                                                <span class="mx-2">|</span>
+                                                <i class="bi bi-clock"></i> {{ doctor.experience }}
+                                            </p>
+                                            <div class="mt-2">
+                                                <small class="text-muted">Available Slots:</small><br>
+                                                {% for time in doctor.availability[:3] %}
+                                                <span class="time-slot">{{ time }}</span>
+                                                {% endfor %}
+                                                {% if doctor.availability|length > 3 %}
+                                                <span class="badge bg-info">+{{ doctor.availability|length - 3 }} more</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="alert alert-info mt-3">
+                            <h6><i class="bi bi-info-circle"></i> Benefits of Booking Through MedInsights:</h6>
+                            <ul class="mb-0">
+                                <li>Priority appointment with specialists</li>
+                                <li>Digital medical record sharing</li>
+                                <li>Follow-up consultation reminders</li>
+                                <li>Insurance assistance available</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% elif disease_name == "Normal skin" %}
+                <div class="card border-success shadow-sm mt-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-check-circle"></i> Preventive Care</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Great news! No signs of skin cancer were detected. However, regular checkups are important for maintaining healthy skin.
+                        </p>
+                        <div class="d-grid gap-2 d-md-flex">
+                            <a href="/book_appointment?disease={{ disease_name }}" 
+                               class="btn btn-outline-success">
+                                <i class="bi bi-calendar-heart"></i> Schedule Annual Checkup
+                            </a>
+                            <button class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#preventiveTips">
+                                <i class="bi bi-lightbulb"></i> View Preventive Tips
+                            </button>
+                        </div>
+                        
+                        <div class="collapse mt-3" id="preventiveTips">
+                            <div class="card card-body">
+                                <h6>Skin Cancer Prevention Tips:</h6>
+                                <ul>
+                                    <li>Use sunscreen with SPF 30+ daily</li>
+                                    <li>Avoid peak sun hours (10 AM - 4 PM)</li>
+                                    <li>Wear protective clothing and hats</li>
+                                    <li>Perform monthly self-examinations</li>
+                                    <li>Get annual professional skin checks</li>
+                                    <li>Avoid tanning beds</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Important Notice -->
+                <div class="alert alert-warning mt-4" role="alert">
+                    <h6><i class="bi bi-exclamation-triangle"></i> Important Medical Disclaimer</h6>
+                    <p class="mb-0">
+                        This analysis is for educational and preliminary screening purposes only. 
+                        It is not a substitute for professional medical advice, diagnosis, or treatment. 
+                        Always seek the advice of qualified health providers with any questions you may have regarding medical conditions.
+                    </p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="text-center mt-4 mb-5">
+                    <div class="btn-group" role="group">
+                        <a href="/" class="btn btn-primary btn-lg me-2">
+                            <i class="bi bi-arrow-repeat"></i> Analyze Another Image
+                        </a>
+                        <button onclick="window.print()" class="btn btn-outline-secondary btn-lg me-2">
+                            <i class="bi bi-printer"></i> Print Results
+                        </button>
+                        <a href="/view_appointments" class="btn btn-outline-info btn-lg">
+                            <i class="bi bi-calendar-event"></i> Manage Appointments
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5>MedInsights</h5>
+                    <p class="mb-0">AI-powered skin cancer detection system</p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>Quick Links</h5>
+                    <a href="/" class="text-white text-decoration-none d-block">Home</a>
+                    <a href="/about" class="text-white text-decoration-none d-block">About</a>
+                    <a href="/book_appointment" class="text-white text-decoration-none d-block">Book Appointment</a>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>Need Help?</h5>
+                    <p class="mb-0">
+                        <i class="bi bi-telephone"></i> Support: +91 9876543210<br>
+                        <i class="bi bi-envelope"></i> help@medinsights.com
+                    </p>
+                </div>
+            </div>
+            <hr class="bg-white my-3">
+            <p class="mb-0">&copy; 2025 MedInsights. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Time slot selection
+        document.querySelectorAll('.time-slot').forEach(slot => {
+            slot.addEventListener('click', function() {
+                this.classList.toggle('selected');
+            });
+        });
+
+        // Auto-hide alerts after 10 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const alertInstance = new bootstrap.Alert(alert);
+                setTimeout(() => alertInstance.close(), 10000);
+            });
+        }, 10000);
+
+        // Print function enhancement
+        window.addEventListener('beforeprint', function() {
+            // Hide navigation and footer for printing
+            document.querySelector('nav').style.display = 'none';
+            document.querySelector('footer').style.display = 'none';
+            document.querySelector('.btn-group').style.display = 'none';
+        });
+
+        window.addEventListener('afterprint', function() {
+            // Show navigation and footer after printing
+            document.querySelector('nav').style.display = 'block';
+            document.querySelector('footer').style.display = 'block';
+            document.querySelector('.btn-group').style.display = 'block';
+        });
+    </script>
+</body>
+</html>

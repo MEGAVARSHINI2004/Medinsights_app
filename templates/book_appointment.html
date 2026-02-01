@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment - Skin Cancer Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .severity-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .severity-high { background-color: #ffcccc; color: #cc0000; }
+        .severity-medium { background-color: #fff3cd; color: #856404; }
+        .severity-low { background-color: #d4edda; color: #155724; }
+        .doctor-card { border-left: 4px solid #0d6efd; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">MedInsights</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/book_appointment">Book Appointment</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0"><i class="bi bi-calendar-check"></i> Book Doctor Appointment</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Condition Info -->
+                        <div class="alert alert-info mb-4">
+                            <h5 class="alert-heading">{{ disease }}</h5>
+                            <p class="mb-1"><strong>Severity:</strong> 
+                                <span class="severity-badge severity-{{ cancer_info.severity|lower if cancer_info.severity else 'low' }}">
+                                    {{ cancer_info.severity if cancer_info.severity else 'Low' }}
+                                </span>
+                            </p>
+                            <p class="mb-0"><strong>Recommendation:</strong> {{ cancer_info.urgency if cancer_info.urgency else 'Consult a dermatologist' }}</p>
+                        </div>
+
+                        <!-- Booking Form -->
+                        <form method="POST" action="/book_appointment">
+                            <input type="hidden" name="disease" value="{{ disease }}">
+                            
+                            <h5 class="mb-3">Patient Information</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Full Name *</label>
+                                    <input type="text" class="form-control" name="patient_name" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Age</label>
+                                    <input type="number" class="form-control" name="patient_age" min="1" max="120">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Email Address *</label>
+                                    <input type="email" class="form-control" name="patient_email" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Phone Number *</label>
+                                    <input type="tel" class="form-control" name="patient_phone" required>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+                            
+                            <h5 class="mb-3">Select Doctor</h5>
+                            {% if doctors %}
+                                {% for doctor in doctors %}
+                                <div class="card doctor-card mb-3">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" 
+                                                   name="doctor_name" id="doctor{{ loop.index }}" 
+                                                   value="{{ doctor.name }}" 
+                                                   {% if loop.first %}checked{% endif %}
+                                                   required>
+                                            <label class="form-check-label w-100" for="doctor{{ loop.index }}">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h5 class="mb-1">{{ doctor.name }}</h5>
+                                                        <p class="mb-1 text-muted">{{ doctor.specialization }}</p>
+                                                        <p class="mb-1 small">
+                                                            <i class="bi bi-hospital"></i> {{ doctor.hospital }}
+                                                            | <i class="bi bi-star-fill text-warning"></i> {{ doctor.rating }}
+                                                            | <i class="bi bi-clock"></i> {{ doctor.experience }}
+                                                        </p>
+                                                    </div>
+                                                    <span class="badge bg-success">{{ doctor.fees }}</span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    No doctors available for this condition. Please select a general dermatologist.
+                                </div>
+                            {% endif %}
+
+                            <hr class="my-4">
+                            
+                            <h5 class="mb-3">Appointment Details</h5>
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label">Appointment Date *</label>
+                                    <input type="date" class="form-control" name="appointment_date" 
+                                           min="{{ today }}" required id="appointmentDate">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Preferred Time *</label>
+                                    <select class="form-select" name="appointment_time" required>
+                                        <option value="">Select Time</option>
+                                        {% if doctors %}
+                                            {% for time in doctors[0].availability %}
+                                                <option value="{{ time }}">{{ time }}</option>
+                                            {% endfor %}
+                                        {% else %}
+                                            <option value="10:00">10:00 AM</option>
+                                            <option value="11:00">11:00 AM</option>
+                                            <option value="14:00">02:00 PM</option>
+                                            <option value="15:00">03:00 PM</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                Please ensure all information is correct. You will receive a confirmation.
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                                <a href="/" class="btn btn-secondary me-md-2">Cancel</a>
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-calendar-check"></i> Confirm Booking
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Set min date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('appointmentDate').min = today;
+        
+        // Doctor selection changes time slots
+        document.querySelectorAll('input[name="doctor_name"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                // In a real app, you would fetch available slots for selected doctor
+                console.log('Selected doctor:', this.value);
+            });
+        });
+    </script>
+</body>
+</html>

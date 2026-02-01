@@ -92,4 +92,9 @@ Add additional health recommendations
 Please create a pull request or open an issue to discuss changes.
 
 Screenshot:
-<img width="1592" height="597" alt="image" src="https://github.com/user-attachments/assets/193a66ce-7bde-4bee-9bf4-bea8dc561994" />
+
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/94028952-54f5-4bcf-8f60-863e34208e52" />
+
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/496c50c2-5b82-4800-93a2-6643467d7e6f" />
+
+
